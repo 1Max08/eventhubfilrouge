@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eventhub-postgres
+    environment:
+      POSTGRES_USER: eventhub
+      POSTGRES_PASSWORD: eventhub
+      POSTGRES_DB: eventhub
+    ports:
+      - "5432:5432"
+    volumes:
+      - eventhub-pgdata:/var/lib/postgresql/data
+    networks:
+      - eventhub-net
+
+  mongo:
+    image: mongo:7
+    container_name: eventhub-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - eventhub-mongodata:/data/db
+    networks:
+      - eventhub-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: eventhub-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - eventhub-net
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    container_name: eventhub-api-dev
+    env_file:
+      - .env
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - mongo
+      - redis
+    networks:
+      - eventhub-net
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.dev
+    container_name: eventhub-web-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - eventhub-net
+
+volumes:
+  eventhub-pgdata:
+  eventhub-mongodata:
+
+networks:
+  eventhub-net:
+    driver: bridge
