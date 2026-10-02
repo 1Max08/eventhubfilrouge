@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# eventhubfilrouge
-=======
 # Fil rouge
 
 ## Installation
@@ -86,4 +83,39 @@ Afficher l'historique :
 ```bash
 git log --oneline
 ```
->>>>>>> 92f6dda (test: configure git hooks)
+
+Workflow Git
+
+Le projet utilise un workflow Git simple et reproductible basé sur trois niveaux de branches :
+
+main : branche de production
+dev : branche d'intégration
+feature/* : branches éphémères utilisées pour développer les différents livrables
+Schéma
+┌──────────────────┐
+│ main │
+│ Production │
+└────────▲─────────┘
+│
+Pull Request
+│
+┌────────┴─────────┐
+│ dev │
+│ Intégration │
+└────────▲─────────┘
+│
+Pull Request
+│
+┌─────────────────┴─────────────────┐
+│ │
+┌────────┴─────────┐ ┌────────┴─────────┐
+│ feature/events │ │ feature/auth │
+│ Livrable │ │ Livrable │
+└──────────────────┘ └──────────────────┘
+Règles
+Les modifications ne sont pas réalisées directement sur main.
+Les modifications de production sont intégrées dans main via une Pull Request depuis dev.
+Les développements sont réalisés sur des branches éphémères feature/_.
+Une branche feature/_ est intégrée dans dev via une Pull Request.
+Une fois les fonctionnalités validées dans dev, elles peuvent être intégrées dans main via une Pull Request.
+Les branches main et dev sont protégées sur GitHub.
