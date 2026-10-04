@@ -1,4 +1,7 @@
 import { Router } from 'express';
+
+import { authenticateToken } from '../middlewares/auth.middleware.js';
+
 import {
   createReservationController,
   deleteReservationController,
@@ -9,10 +12,12 @@ import {
 
 const router = Router();
 
-router.get('/', getReservations);
-router.get('/:id', getReservation);
-router.post('/', createReservationController);
-router.put('/:id', updateReservationController);
-router.delete('/:id', deleteReservationController);
+// Toutes les routes de réservation nécessitent une authentification
+router.get('/', authenticateToken, getReservations);
+router.get('/:id', authenticateToken, getReservation);
+
+router.post('/', authenticateToken, createReservationController);
+router.put('/:id', authenticateToken, updateReservationController);
+router.delete('/:id', authenticateToken, deleteReservationController);
 
 export default router;

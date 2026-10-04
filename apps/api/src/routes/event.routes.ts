@@ -1,4 +1,7 @@
 import { Router } from 'express';
+
+import { authenticateToken } from '../middlewares/auth.middleware.js';
+
 import {
   createEventController,
   deleteEventController,
@@ -9,10 +12,13 @@ import {
 
 const router = Router();
 
+// Routes publiques
 router.get('/', getEvents);
 router.get('/:id', getEvent);
-router.post('/', createEventController);
-router.put('/:id', updateEventController);
-router.delete('/:id', deleteEventController);
+
+// Routes protégées
+router.post('/', authenticateToken, createEventController);
+router.put('/:id', authenticateToken, updateEventController);
+router.delete('/:id', authenticateToken, deleteEventController);
 
 export default router;

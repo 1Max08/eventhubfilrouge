@@ -1,52 +1,48 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-export type UserRole = 'PARTICIPANT' | 'ORGANIZER' | 'ADMIN';
-
-export interface JwtPayload {
-  userId: number;
-  role: UserRole;
-}
-
 export interface AuthenticatedRequest extends Request {
-  user?: JwtPayload;
+  user?: {
+    userId: number;
+    role: 'PARTICIPANT' | 'ORGANIZER' | 'ADMIN';
+  };
 }
 
 export function authenticateToken(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
-): void {
-  const authorization = req.headers.authorization;
+) {
+  const authHeader = req.headers.authorization;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
-    res.status(401).json({
-      message: "Token d'authentification manquant",
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      message: 'Token manquant',
     });
-    return;
   }
 
-  const token = authorization.substring(7);
+  const token = authHeader.split(' ')[1];
+
   const jwtSecret = process.env.JWT_SECRET;
 
   if (!jwtSecret) {
-    res.status(500).json({
+    return res.status(500).json({
       message: "JWT_SECRET n'est pas configuré",
     });
-    return;
   }
 
   try {
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+    const decoded = jwt.verify(token, jwtSecret);
 
     if (
+      typeof decoded !== 'object' ||
+      decoded === null ||
       typeof decoded.userId !== 'number' ||
       !['PARTICIPANT', 'ORGANIZER', 'ADMIN'].includes(decoded.role)
     ) {
-      res.status(401).json({
+      return res.status(401).json({
         message: 'Token invalide',
       });
-      return;
     }
 
     req.user = {
@@ -56,32 +52,8 @@ export function authenticateToken(
 
     next();
   } catch {
-    res.status(401).json({
+    return res.status(401).json({
       message: 'Token invalide ou expiré',
     });
   }
-}
-
-export function requireRole(...allowedRoles: UserRole[]) {
-  return (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction,
-  ): void => {
-    if (!req.user) {
-      res.status(401).json({
-        message: 'Authentification requise',
-      });
-      return;
-    }
-
-    if (!allowedRoles.includes(req.user.role)) {
-      res.status(403).json({
-        message: 'Accès interdit',
-      });
-      return;
-    }
-
-    next();
-  };
 }
